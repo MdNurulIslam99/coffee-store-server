@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -35,6 +35,71 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+    // mongo db connection
+    const coffeeCollection = client.db("coffeeDB").collection("coffees");
+
+    //All coffee er get
+
+    app.get("/coffees", async (req, res) => {
+      //   const cursor = coffeeCollection.find();
+      //   const result = await cursor.toArray();
+      const result = await coffeeCollection.find().toArray();
+      res.send(result);
+    });
+
+    // specific coffee er get and view
+    app.get("/coffees/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await coffeeCollection.findOne(query);
+      res.send(result);
+    });
+
+    // server or database e data patano
+    app.post("/coffees", async (req, res) => {
+      const newCoffee = req.body;
+      console.log(newCoffee);
+      const result = await coffeeCollection.insertOne(newCoffee);
+      res.send(result);
+    });
+
+    // coffee Update
+    app.put("/coffees/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedCoffee = req.body;
+      const updatedDoc = {
+        $set: updatedCoffee,
+      };
+
+      //   const updatedDoc = {
+      //     $set: {
+      //       name: updatedCoffee.name,
+      //       supplier: updatedCoffee.supplier,
+      //       taste: updatedCoffee.taste,
+      //       photo: updatedCoffee.photo,
+      //       price: updatedCoffee.price,
+      //       quantity: updatedCoffee.quantity,
+      //       details: updatedCoffee.details,
+      //     },
+      //   };
+      const result = await coffeeCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    // coffee delete
+    app.delete("/coffees/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await coffeeCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
@@ -42,7 +107,7 @@ async function run() {
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
