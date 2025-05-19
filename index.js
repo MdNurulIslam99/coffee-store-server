@@ -37,6 +37,7 @@ async function run() {
     await client.connect();
     // mongo db connection
     const coffeeCollection = client.db("coffeeDB").collection("coffees");
+    const userCollection = client.db("coffeeDB").collection("users");
 
     //All coffee er get
 
@@ -97,6 +98,14 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await coffeeCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // user related Apis create data in db
+    app.post("/users", async (req, res) => {
+      const userProfile = req.body;
+      console.log(userProfile);
+      const result = await userCollection.insertOne(userProfile);
       res.send(result);
     });
 
